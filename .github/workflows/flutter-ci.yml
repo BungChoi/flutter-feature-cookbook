@@ -1,0 +1,36 @@
+name: Flutter Examples CI
+on: [push, pull_request]
+
+jobs:
+  analyze_test_all_examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.2"
+          cache: true
+
+      - run: flutter --version
+
+      - name: Analyze & test each example
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for d in examples/*; do
+            if [ -f "$d/pubspec.yaml" ]; then
+              echo "=== Processing $d ==="
+              (cd "$d" \
+                && flutter pub get \
+                && dart format --set-exit-if-changed . \
+                && flutter analyze \
+                && flutter test)
+            fi
+          done
